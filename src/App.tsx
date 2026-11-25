@@ -37,9 +37,13 @@ export default function App() {
     [problems, selectedId],
   );
 
-  const handleResult = (number: number) => {
-    const problem = problems[number - 1];
-    if (problem) setSelected(problem.id);
+  const remaining = useMemo(
+    () => problems.filter((p) => !completedIds.has(p.id)),
+    [problems, completedIds],
+  );
+
+  const handleResult = (problem: (typeof problems)[number]) => {
+    setSelected(problem.id);
   };
 
   const handleToggleDone = () => {
@@ -79,7 +83,8 @@ export default function App() {
                     Random wheel
                   </h2>
                   <p className="truncate text-[11px] text-white/45">
-                    {activeSet.label} · {activeSet.problems.length} questions
+                    {activeSet.label} · {remaining.length} of{" "}
+                    {activeSet.problems.length} left
                   </p>
                 </div>
                 <button
@@ -94,7 +99,7 @@ export default function App() {
 
               <Wheel
                 key={activeSet.id}
-                problems={problems}
+                problems={remaining}
                 onResult={handleResult}
               />
 

@@ -18,7 +18,7 @@ const PALETTE_FALLBACK: [string, string] = ["#4f6cff", "#3b53e6"];
 
 interface WheelProps {
   problems: NumberedProblem[];
-  onResult: (number: number) => void;
+  onResult: (problem: NumberedProblem) => void;
 }
 
 export function Wheel({ problems, onResult }: WheelProps) {
@@ -112,10 +112,10 @@ export function Wheel({ problems, onResult }: WheelProps) {
       ctx.font = "700 12px ui-sans-serif, system-ui, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("SPIN", 0, -6);
+      ctx.fillText(count === 0 ? "ALL DONE" : "SPIN", 0, -6);
       ctx.fillStyle = "#5f6ea8";
       ctx.font = "600 10px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText(`1–${count}`, 0, 12);
+      ctx.fillText(count === 0 ? "0 left" : `${count} left`, 0, 12);
 
       // pointer at top
       const pointerY = -radius - 6;
@@ -147,7 +147,7 @@ export function Wheel({ problems, onResult }: WheelProps) {
 
   const spin = useCallback(() => {
     const count = problems.length;
-    if (spinning || count < 2) return;
+    if (spinning || count < 1) return;
 
     const index = randomInt(count);
     const seg = TAU / count;
@@ -188,12 +188,12 @@ export function Wheel({ problems, onResult }: WheelProps) {
         rafRef.current = null;
         setSpinning(false);
         playResult();
-        onResult(index + 1);
+        onResult(problems[index]);
       }
     };
 
     rafRef.current = requestAnimationFrame(tick);
-  }, [problems.length, spinning, draw, onResult]);
+  }, [problems, spinning, draw, onResult]);
 
   return (
     <div className="flex flex-col items-center">
@@ -208,13 +208,21 @@ export function Wheel({ problems, onResult }: WheelProps) {
       <button
         type="button"
         onClick={spin}
-        disabled={spinning || problems.length < 2}
+        disabled={spinning || problems.length === 0}
         className="mt-4 w-full max-w-[320px] cursor-pointer rounded-xl bg-gradient-to-b from-brand-500 to-brand-600 px-6 py-2.5 text-sm font-bold tracking-wide text-white shadow-[0_10px_30px_-8px_rgba(79,108,255,0.8)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {spinning ? "Spinning…" : "Spin the wheel"}
+        {spinning
+          ? "Spinning…"
+          : problems.length === 0
+            ? "All questions completed"
+            : "Spin the wheel"}
       </button>
       <p className="mt-2 text-xs text-white/45">
-        One random number from 1 to {problems.length}
+        {problems.length === 0
+          ? "Nothing left in this set — reset or undo to spin again."
+          : `Picking from ${problems.length} remaining ${
+              problems.length === 1 ? "question" : "questions"
+            }`}
       </p>
     </div>
   );
